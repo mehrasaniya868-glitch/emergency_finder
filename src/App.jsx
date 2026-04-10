@@ -20,6 +20,20 @@ const[loading,setLoading] =useState(false);
     );
   };
   
+  const getDistance = (lat1 ,lon1 , lat2 ,lon2) => {
+    const R = 6371 ;
+    const dLat =(lat2 -lat1) * Math.PI /180 ;
+    const dLon = (lon2 -lon1) * Math.PI /180 ;
+
+    const a = 
+    Math.sin(dLat/2)* Math.sin(dLat/2) +
+    Math.cos(lat1 * Math.PI /180)*
+    Math.cos(lat2 * Math.PI /180)*
+    Math.sin(dLon/2)* Math.sin(dLon/2);
+
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+    return (R * c).toFixed(2);
+  };
   useEffect(() => {
     console.log("updated location:",location);
      if(location && type) {
@@ -37,14 +51,14 @@ const[loading,setLoading] =useState(false);
     if ( type === "fire") amenityType ="fire_station";
 
    const query = `
-  [out:json];
+  [out:json] [timeout:25];
   (
-  node["amenity"="${amenityType}"](around:50000,${location.lat},${location.lng});
+  node["amenity"="${amenityType}"](around:30000,${location.lat},${location.lng});
   );
-  out center;
+  out body;
   `;
   try{
-      const response = await fetch("https://overpass-api.de/api/interpreter",
+      const response = await fetch("https://overpass.kumi.systems/api/interpreter",
      {
     method :"POST",
     body : query
@@ -58,8 +72,6 @@ const[loading,setLoading] =useState(false);
   }
   setLoading(false);
 };
-
-  
 
   return (
     <div className='container'>
@@ -94,10 +106,21 @@ const[loading,setLoading] =useState(false);
         <h2>Nearby Results</h2>
         {places.map((place,index) =>(
           <div className='card' key={index}>
+            <p>
+              📏{getDistance(location.lat , location.lng , place.lat , place.lon)} km away
+            </p>
+
             <p><b>{place.tags?.name || 'Unnamed Place'}</b></p>
-            <p>Latitude :{place.lat}</p>
-             <p>Longitude :{place.lon}</p>
+           <p>📍 Latitude: {place.lat}</p>
+           <p>📍 Longitude: {place.lon}</p>
+           <a
+            href={`https://www.google.com/maps/search/?api=1&query=${place.lat},${place.lon}`}
+             target="_blank"
+              rel="noopener noreferrer">
+               📍 Open in Map
+           </a>
           </div>
+          
         ))}
       </div>
      )}
