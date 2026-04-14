@@ -5,7 +5,8 @@ const App = () => {
   const [location, setLocation] = useState(null);
   const[type,setType] = useState("");
   const [places ,setPlaces] = useState([]);
-const[loading,setLoading] =useState(false);
+  const[loading,setLoading] =useState(false);
+  const[error,setError] = useState("");
   const getLocation = () => {
     navigator.geolocation.getCurrentPosition(
       (position) => {
@@ -19,12 +20,15 @@ const[loading,setLoading] =useState(false);
       }
     );
   };
-  
+  const getEmergencyNumber = () => {
+    if(type ==="hospital")return "102";
+    if(type ==="police") return "100";
+    if(type=== "fire") return "101";
+  };
   const getDistance = (lat1 ,lon1 , lat2 ,lon2) => {
     const R = 6371 ;
     const dLat =(lat2 -lat1) * Math.PI /180 ;
     const dLon = (lon2 -lon1) * Math.PI /180 ;
-
     const a = 
     Math.sin(dLat/2)* Math.sin(dLat/2) +
     Math.cos(lat1 * Math.PI /180)*
@@ -45,6 +49,7 @@ const[loading,setLoading] =useState(false);
  
   if(!location) return;
   setLoading(true);
+  setError("");
   let amenityType = "";
   if ( type === "hospital") amenityType ="hospital";
    if ( type === "police") amenityType ="police";
@@ -69,6 +74,7 @@ const[loading,setLoading] =useState(false);
    setPlaces(data.elements || []);
   } catch (error) {
     console.error("Error fetching nearby places:", error);
+    setError("Failed to fetch nearby places. Please try again.");
   }
   setLoading(false);
 };
@@ -76,7 +82,6 @@ const[loading,setLoading] =useState(false);
   return (
     <div className='container'>
       <Heading />
-
       <button className ="button" onClick={() => {
         getLocation();
        setType("hospital");
@@ -100,16 +105,24 @@ const[loading,setLoading] =useState(false);
       }}>
         Fire
       </button>
-      {loading && <p>Loading...</p>}
-     {places.length > 0 && (
-      <div>
+      {loading && <p>🔍 Finding nearby help...</p>}
+      {!loading && error && (
+        <p style={{ color: "red" }}>{error}</p>
+      )}
+      {!loading && !error && places.length === 0 && type &&(
+        <p>No nearby{type} found</p>
+      )}
+      {loading && places.length > 0 && (
+         <div>
+        
         <h2>Nearby Results</h2>
         {places.map((place,index) =>(
           <div className='card' key={index}>
+          <a href={`tel:${getEmergencyNumber()}`}>
+            📞Call ({getEmergencyNumber()})</a>
             <p>
               📏{getDistance(location.lat , location.lng , place.lat , place.lon)} km away
             </p>
-
             <p><b>{place.tags?.name || 'Unnamed Place'}</b></p>
            <p>📍 Latitude: {place.lat}</p>
            <p>📍 Longitude: {place.lon}</p>
@@ -119,13 +132,11 @@ const[loading,setLoading] =useState(false);
               rel="noopener noreferrer">
                📍 Open in Map
            </a>
-          </div>
-          
+          </div>                                                                                                                                                                                                                          
         ))}
       </div>
      )}
     </div>
-    
   );
 };
 export default App;
