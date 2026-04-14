@@ -46,7 +46,6 @@ const App = () => {
   },[location,type]); 
  const fetchNearbyPlaces = async() =>
  {
- 
   if(!location) return;
   setLoading(true);
   setError("");
@@ -78,6 +77,14 @@ const App = () => {
   }
   setLoading(false);
 };
+const nearestPlace =
+  places.length > 0
+    ? places.reduce((prev, curr) => {
+        const prevDist = getDistance(location.lat, location.lng, prev.lat, prev.lon);
+        const currDist = getDistance(location.lat, location.lng, curr.lat, curr.lon);
+        return prevDist < currDist ? prev : curr;
+      })
+    : null;
 
   return (
     <div className='container'>
@@ -105,19 +112,27 @@ const App = () => {
       }}>
         Fire
       </button>
-      {loading && <p>🔍 Finding nearby help...</p>}
+      {loading && places.length === 0 && 
+      <p>🔍 Finding nearby help...</p>}
       {!loading && error && (
+        <div>
         <p style={{ color: "red" }}>{error}</p>
+        <button onClick={fetchNearbyPlaces}>🔄Retry</button>
+        </div>
       )}
       {!loading && !error && places.length === 0 && type &&(
-        <p>No nearby{type} found</p>
+        <p>No nearby {type} found</p>
       )}
-      {loading && places.length > 0 && (
+      {!loading && places.length > 0 && (
          <div>
         
         <h2>Nearby Results</h2>
         {places.map((place,index) =>(
-          <div className='card' key={index}>
+          <div className='card'
+          
+          style={{border: place === nearestPlace ? "2px solid green" : ""}}
+           key={index}>
+            {place === nearestPlace && <p>⭐ Nearest</p>}
           <a href={`tel:${getEmergencyNumber()}`}>
             📞Call ({getEmergencyNumber()})</a>
             <p>
@@ -131,6 +146,15 @@ const App = () => {
              target="_blank"
               rel="noopener noreferrer">
                📍 Open in Map
+                <iframe
+                width="100%"
+                 height="200"
+                  style={{ border: 0, marginTop: "10px" }}
+                  loading="lazy"
+                  allowFullScreen
+                  src={`https://maps.google.com/maps?q=${place.lat},${place.lon}&z=15&output=embed`}
+                ></iframe>
+                 
            </a>
           </div>                                                                                                                                                                                                                          
         ))}
