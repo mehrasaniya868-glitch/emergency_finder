@@ -1,6 +1,9 @@
   import "./App.css";
 import React,{useState,useEffect} from 'react';
+import "leaflet/dist/leaflet.css";
 import Heading from './components/Heading';
+import L from "leaflet";
+import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
 const App = () => {
   const [location, setLocation] = useState(null);
   const[type,setType] = useState("");
@@ -57,7 +60,7 @@ const App = () => {
    const query = `
   [out:json] [timeout:25];
   (
-  node["amenity"="${amenityType}"](around:30000,${location.lat},${location.lng});
+  node["amenity"="${amenityType}"](around:5000,${location.lat},${location.lng});
   );
   out body;
   `;
@@ -85,7 +88,21 @@ const nearestPlace =
         return prevDist < currDist ? prev : curr;
       })
     : null;
-
+  const userIcon = new L.Icon({
+    iconUrl: "https://cdn-icons-png.flaticon.com/512/64/64113.png",
+    iconSize:[30,30],
+  });
+  const hospitalIcon = new L.icon({
+    iconUrl : "https://cdn-icons-png.flaticon.com/512/2967/2967350.png",
+    iconSize : [30,30],
+  });
+  const policeIcon = new L.Icon({
+    iconUrl: "https://cdn-icons-png.flaticon.com/512/484/484167.png"
+  });
+  const foreIcon = new L.Icon({
+    iconUrl : "https://cdn-icons-png.flaticon.com/512/482/482132.png",
+    iconSize : [30,30],
+  });
   return (
     <div className='container'>
       <Heading />
@@ -119,7 +136,25 @@ const nearestPlace =
         <p style={{ color: "red" }}>{error}</p>
         <button onClick={fetchNearbyPlaces}>🔄Retry</button>
         </div>
+        
       )}
+     {location && places.length > 0 && (
+  <MapContainer
+    center={[location.lat, location.lng]}
+    zoom={15}
+    style={{ height: "400px", width: "100%", marginTop: "20px" }}>
+    <TileLayer
+      url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"/>
+    <Marker position={[location.lat, location.lng]} icon={userIcon}>
+      <Popup>You are here</Popup>
+    </Marker>
+    {places.map((place, index) => (
+      <Marker key={index} position={[place.lat, place.lon]}>
+        <Popup>{place.tags?.name || "Unnamed Place"}</Popup>
+      </Marker>
+    ))}
+  </MapContainer>
+)}
       {!loading && !error && places.length === 0 && type &&(
         <p>No nearby {type} found</p>
       )}
@@ -146,14 +181,7 @@ const nearestPlace =
              target="_blank"
               rel="noopener noreferrer">
                📍 Open in Map
-                <iframe
-                width="100%"
-                 height="200"
-                  style={{ border: 0, marginTop: "10px" }}
-                  loading="lazy"
-                  allowFullScreen
-                  src={`https://maps.google.com/maps?q=${place.lat},${place.lon}&z=15&output=embed`}
-                ></iframe>
+              
                  
            </a>
           </div>                                                                                                                                                                                                                          
