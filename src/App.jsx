@@ -10,6 +10,7 @@ const App = () => {
   const [places ,setPlaces] = useState([]);
   const[loading,setLoading] =useState(false);
   const[error,setError] = useState("");
+  const [search ,setSearch] = useState("");
   const getLocation = () => {
     navigator.geolocation.getCurrentPosition(
       (position) => {
@@ -88,6 +89,10 @@ const nearestPlace =
         return prevDist < currDist ? prev : curr;
       })
     : null;
+     const filteredPlaces = places.filter((place) => {
+    const name = place.tags?.name?.toLowerCase() || "";
+  return name.includes(search.toLowerCase().trim());
+  });
   const userIcon = new L.Icon({
     iconUrl: "https://cdn-icons-png.flaticon.com/512/64/64113.png",
     iconSize:[30,30],
@@ -137,7 +142,12 @@ const nearestPlace =
         <button onClick={fetchNearbyPlaces}>🔄Retry</button>
         </div>
         
+        
       )}
+      <input type="text" placeholder="search place..." value={search} 
+      onChange={(e) => setSearch(e.target.value)}
+       style={{ marginTop: "10px", padding: "8px", width: "80%" }}
+          />
      {location && places.length > 0 && (
   <MapContainer
     center={[location.lat, location.lng]}
@@ -148,7 +158,7 @@ const nearestPlace =
     <Marker position={[location.lat, location.lng]} icon={userIcon}>
       <Popup>You are here</Popup>
     </Marker>
-    {places.map((place, index) => (
+    {filteredPlaces.map((place, index) => (
       <Marker key={index} position={[place.lat, place.lon]}>
         <Popup>{place.tags?.name || "Unnamed Place"}</Popup>
       </Marker>
@@ -171,7 +181,8 @@ const nearestPlace =
           <a href={`tel:${getEmergencyNumber()}`}>
             📞Call ({getEmergencyNumber()})</a>
             <p>
-              📏{getDistance(location.lat , location.lng , place.lat , place.lon)} km away
+              📏{getDistance(location.lat , location.lng ,
+                 place.lat , place.lon)} km away
             </p>
             <p><b>{place.tags?.name || 'Unnamed Place'}</b></p>
            <p>📍 Latitude: {place.lat}</p>
