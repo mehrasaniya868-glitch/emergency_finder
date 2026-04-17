@@ -5,7 +5,7 @@ import Heading from './components/Heading';
 import L from "leaflet";
 import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
 const App = () => {
-  const [location, setLocation] = useState(null);
+  const [Location, setLocation] = useState(null);
   const[type,setType] = useState("");
   const [places ,setPlaces] = useState([]);
   const[loading,setLoading] =useState(false);
@@ -61,7 +61,7 @@ const App = () => {
    const query = `
   [out:json] [timeout:25];
   (
-  node["amenity"="${amenityType}"](around:5000,${location.lat},${location.lng});
+  node["amenity"="${amenityType}"](around:20000,${location.lat},${location.lng});
   );
   out body;
   `;
@@ -93,11 +93,18 @@ const nearestPlace =
     const name = place.tags?.name?.toLowerCase() || "";
   return name.includes(search.toLowerCase().trim());
   });
+    const sortedPlaces = location ?
+    [...filteredPlaces].sort((a,b) => {
+    const distA = parseFloat(getDistance(Location.lat ,Location.lng ,a.lat ,a.lon));
+    const distB = parseFloat(getDistance(Location.lat , Location.lng ,b.lat,b.lon));
+    return distA - distB;
+  })
+  : filteredPlaces;
   const userIcon = new L.Icon({
     iconUrl: "https://cdn-icons-png.flaticon.com/512/64/64113.png",
     iconSize:[30,30],
   });
-  const hospitalIcon = new L.icon({
+  const hospitalIcon = new L.Icon({
     iconUrl : "https://cdn-icons-png.flaticon.com/512/2967/2967350.png",
     iconSize : [30,30],
   });
@@ -158,7 +165,7 @@ const nearestPlace =
     <Marker position={[location.lat, location.lng]} icon={userIcon}>
       <Popup>You are here</Popup>
     </Marker>
-    {filteredPlaces.map((place, index) => (
+    {sortedPlaces.map((place, index) => (
       <Marker key={index} position={[place.lat, place.lon]}>
         <Popup>{place.tags?.name || "Unnamed Place"}</Popup>
       </Marker>
@@ -172,7 +179,7 @@ const nearestPlace =
          <div>
         
         <h2>Nearby Results</h2>
-        {places.map((place,index) =>(
+        {sortedPlaces.map((place,index) =>(
           <div className='card'
           
           style={{border: place === nearestPlace ? "2px solid green" : ""}}
@@ -191,9 +198,7 @@ const nearestPlace =
             href={`https://www.google.com/maps/search/?api=1&query=${place.lat},${place.lon}`}
              target="_blank"
               rel="noopener noreferrer">
-               📍 Open in Map
-              
-                 
+               📍 Open in Map      
            </a>
           </div>                                                                                                                                                                                                                          
         ))}
