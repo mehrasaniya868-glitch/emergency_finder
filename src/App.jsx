@@ -201,12 +201,14 @@ const nearestPlace =
             <p><b>{place.tags?.name || 'Unnamed Place'}</b></p>
            <p>📍 Latitude: {place.lat}</p>
            <p>📍 Longitude: {place.lon}</p>
-           <a
-            href={`https://www.google.com/maps/search/?api=1&query=${place.lat},${place.lon}`}
-             target="_blank"
-              rel="noopener noreferrer">
-               📍 Open in Map      
-           </a>
+           {place.lat && place.lon &&(
+          <a 
+          href ={`https://www.google.com/maps/dir/?api=1&origin=${location.lat},${location.lng}&destination=${place.lat},${place.lon}`}
+          target ="_blank"
+          rel="noopener noreferrer" >
+              🚗Get Direction
+          </a>
+           )}
           </div>                                                                                                                                                                                                                          
         ))}
       </div>
