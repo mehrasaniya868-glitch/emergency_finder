@@ -5,7 +5,7 @@ import Heading from './components/Heading';
 import L from "leaflet";
 import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
 const App = () => {
-  const [Location, setLocation] = useState(null);
+  const [location, setLocation] = useState(null);
   const[type,setType] = useState("");
   const [places ,setPlaces] = useState([]);
   const[loading,setLoading] =useState(false);
@@ -66,21 +66,26 @@ const App = () => {
   out body;
   `;
   try{
-      const response = await fetch("https://overpass.kumi.systems/api/interpreter",
+      const response = await fetch("https://overpass-api.de/api/interpreter",
      {
     method :"POST",
     body : query
-   }
-   );
-   const data = await response.json();
-    console.log("API Data:", data);
-   setPlaces(data.elements || []);
-  } catch (error) {
-    console.error("Error fetching nearby places:", error);
-    setError("Failed to fetch nearby places. Please try again.");
+   });
+    if (!response.ok) {
+  throw new Error("API failed");
+}
+
+const data = await response.json();
+console.log("API:" , data);
+setPlaces(data.elements || []);
+} catch (err) {
+    console.error("Error:", err);
+    setError("Failed to fetch data");
+  } finally {
+    setLoading(false);
   }
-  setLoading(false);
 };
+  
 const nearestPlace =
   places.length > 0
     ? places.reduce((prev, curr) => {
@@ -89,17 +94,19 @@ const nearestPlace =
         return prevDist < currDist ? prev : curr;
       })
     : null;
-     const filteredPlaces = places.filter((place) => {
+     const filteredPlaces = search?
+      places.filter((place) => {
     const name = place.tags?.name?.toLowerCase() || "";
   return name.includes(search.toLowerCase().trim());
-  });
+  }) :places;
     const sortedPlaces = location ?
     [...filteredPlaces].sort((a,b) => {
-    const distA = parseFloat(getDistance(Location.lat ,Location.lng ,a.lat ,a.lon));
-    const distB = parseFloat(getDistance(Location.lat , Location.lng ,b.lat,b.lon));
+    const distA = parseFloat(getDistance(location.lat ,location.lng ,a.lat ,a.lon));
+    const distB = parseFloat(getDistance(location.lat , location.lng ,b.lat,b.lon));
     return distA - distB;
   })
-  : filteredPlaces;
+  
+  : [];
   const userIcon = new L.Icon({
     iconUrl: "https://cdn-icons-png.flaticon.com/512/64/64113.png",
     iconSize:[30,30],
