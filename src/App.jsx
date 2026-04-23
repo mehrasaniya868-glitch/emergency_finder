@@ -11,6 +11,7 @@ const App = () => {
   const[loading,setLoading] =useState(false);
   const[error,setError] = useState("");
   const [search ,setSearch] = useState("");
+  const [emergencyMode , setEmergencyMode] = useState(false);
   const getLocation = () => {
     navigator.geolocation.getCurrentPosition(
       (position) => {
@@ -48,6 +49,13 @@ const App = () => {
       fetchNearbyPlaces();
     }
   },[location,type]); 
+   
+  useEffect(() => {
+    if(location && type ==="hospital" && places.length >0){
+      handleEmergencyClick();
+      
+    }
+  },[placess]);
  const fetchNearbyPlaces = async() =>
  {
   if(!location) return;
@@ -61,7 +69,7 @@ const App = () => {
    const query = `
   [out:json] [timeout:25];
   (
-  node["amenity"="${amenityType}"](around:20000,${location.lat},${location.lng});
+  node["amenity"="${amenityType}"](around:50000,${location.lat},${location.lng});
   );
   out body;
   `;
@@ -105,7 +113,6 @@ const nearestPlace =
     const distB = parseFloat(getDistance(location.lat , location.lng ,b.lat,b.lon));
     return distA - distB;
   })
-  
   : [];
   const userIcon = new L.Icon({
     iconUrl: "https://cdn-icons-png.flaticon.com/512/64/64113.png",
@@ -122,9 +129,40 @@ const nearestPlace =
     iconUrl : "https://cdn-icons-png.flaticon.com/512/482/482132.png",
     iconSize : [30,30],
   });
+
+  const handleEmergencyClick = () => {
+    if(!location) {
+      alert("Location not available");
+      return;
+    }
+    if(!nearestPlace){
+      alert("No hospital found nearby");
+      return;
+    }
+     const url = `https://www.google.com/maps/dir/?api=1&origin=${location.lat},${location.lng}&destination=${nearestPlace.lat},${nearestPlace.lon}`;
+      window.open(url, "_blank");
+  };
   return (
     <div className='container'>
       <Heading />
+          <button style={{
+          background: "red", 
+  color: "white", 
+  marginTop: "10px",
+  padding : "10px 20px",
+  border: "none",
+  borderRadius: "5px",
+  marginBottom: "10px",
+  cursor: "pointer"
+  }} 
+   onClick={() =>{
+  getLocation();
+  setType("hospital");
+  }}>
+  🚨 Emergency Help
+</button>
+
+          
       <button className ="button" onClick={() => {
         getLocation();
        setType("hospital");
@@ -154,10 +192,9 @@ const nearestPlace =
         <div>
         <p style={{ color: "red" }}>{error}</p>
         <button onClick={fetchNearbyPlaces}>🔄Retry</button>
-        </div>
-        
-        
+        </div> 
       )}
+  
       <input type="text" placeholder="search place..." value={search} 
       onChange={(e) => setSearch(e.target.value)}
        style={{ marginTop: "10px", padding: "8px", width: "80%" }}
@@ -173,7 +210,12 @@ const nearestPlace =
       <Popup>You are here</Popup>
     </Marker>
     {sortedPlaces.map((place, index) => (
-      <Marker key={index} position={[place.lat, place.lon]}>
+      <Marker key={index} position={[place.lat, place.lon]}
+      icon={
+      type === "hospital" ? hospitalIcon :
+      type === "police" ? policeIcon :
+      type === "fire" ? foreIcon : null
+      }>
         <Popup>{place.tags?.name || "Unnamed Place"}</Popup>
       </Marker>
     ))}
