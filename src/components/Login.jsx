@@ -34,12 +34,8 @@ const Login = ({onLogin}) => {
       <button onClick={handleSubmit}>
         Continue
       </button>
-      <button onClick={() => {
-        localStorage.removeItem("user");
-        setUser(null);
-      }}>
-        Logout
-      </button>
+     
+      
     </div>
   </div>
 );

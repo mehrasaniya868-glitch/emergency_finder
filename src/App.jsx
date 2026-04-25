@@ -1,5 +1,5 @@
 import "./App.css";
-import React,{useState,useEffect, use} from 'react';
+import React,{useState,useEffect} from 'react';
 import "leaflet/dist/leaflet.css";
 import Heading from './components/Heading';
 import Login from "./components/Login";
@@ -162,6 +162,24 @@ const nearestPlace =
       <Login onLogin={setUser} />
     ) : (
     <div className='container'>
+     <button 
+  style={{
+  position: "absolute",
+  top: "20px",
+  right: "20px",
+  background: "red",
+  color: "white",
+  border: "none",
+  padding: "8px 15px",
+  borderRadius: "5px",
+  cursor: "pointer"
+}}
+onClick={() => {
+  localStorage.removeItem("user");
+  setUser(null);
+}}>
+  Logout
+</button>
       <Heading />
           <button style={{
           background: "red", 
