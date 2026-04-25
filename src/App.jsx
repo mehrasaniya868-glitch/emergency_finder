@@ -161,7 +161,7 @@ const nearestPlace =
     {!user ? (
       <Login onLogin={setUser} />
     ) : (
-    <div className='container'>
+    <div className='container main-box'>
      <button 
   style={{
   position: "absolute",
@@ -181,6 +181,11 @@ onClick={() => {
   Logout
 </button>
       <Heading />
+     <h3>Welcome, {user?.username} 👋</h3>
+<p style={{fontSize: "12px", color: "gray"}}>
+  Stay safe ❤️
+</p>
+
           <button style={{
           background: "red", 
           color: "white", 
