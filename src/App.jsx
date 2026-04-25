@@ -1,5 +1,5 @@
 import "./App.css";
-import React,{useState,useEffect} from 'react';
+import React,{useState,useEffect, use} from 'react';
 import "leaflet/dist/leaflet.css";
 import Heading from './components/Heading';
 import Login from "./components/Login";
@@ -61,7 +61,15 @@ const App = () => {
   {
     console.log("Emergency Mode:" ,emergencyMode);
   }, [emergencyMode]);
- const fetchNearbyPlaces = async() =>
+
+  useEffect(() => {
+    const savedUser = localStorage.getItem("user");
+    if(savedUser){
+      setUser(JSON.parse(savedUser));
+    }
+  }, []);
+
+  const fetchNearbyPlaces = async() =>
  {
   if(!location) return;
   setLoading(true);

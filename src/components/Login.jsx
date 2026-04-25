@@ -9,6 +9,7 @@ const Login = ({onLogin}) => {
             return;
           }
           onLogin({username, phone});
+          localStorage.setItem("user", JSON.stringify({username, phone}));
     };
   return (
   <div className="login-container">
@@ -32,6 +33,12 @@ const Login = ({onLogin}) => {
 
       <button onClick={handleSubmit}>
         Continue
+      </button>
+      <button onClick={() => {
+        localStorage.removeItem("user");
+        setUser(null);
+      }}>
+        Logout
       </button>
     </div>
   </div>
