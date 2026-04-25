@@ -1,10 +1,12 @@
-  import "./App.css";
+import "./App.css";
 import React,{useState,useEffect} from 'react';
 import "leaflet/dist/leaflet.css";
 import Heading from './components/Heading';
+import Login from "./components/Login";
 import L from "leaflet";
 import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
 const App = () => {
+  const[user,setUser] = useState(null);
   const [location, setLocation] = useState(null);
   const[type,setType] = useState("");
   const [places ,setPlaces] = useState([]);
@@ -51,11 +53,14 @@ const App = () => {
   },[location,type]); 
    
   useEffect(() => {
-    if(location && type ==="hospital" && places.length >0){
+    if(emergencyMode &&location && type ==="hospital" && places.length >0){
       handleEmergencyClick();
-      
     }
-  },[placess]);
+  },[places]);
+  useEffect(() =>
+  {
+    console.log("Emergency Mode:" ,emergencyMode);
+  }, [emergencyMode]);
  const fetchNearbyPlaces = async() =>
  {
   if(!location) return;
@@ -143,19 +148,25 @@ const nearestPlace =
       window.open(url, "_blank");
   };
   return (
+    <>
+      <div>
+    {!user ? (
+      <Login onLogin={setUser} />
+    ) : (
     <div className='container'>
       <Heading />
           <button style={{
           background: "red", 
-  color: "white", 
-  marginTop: "10px",
-  padding : "10px 20px",
-  border: "none",
-  borderRadius: "5px",
-  marginBottom: "10px",
-  cursor: "pointer"
-  }} 
+          color: "white", 
+          marginTop: "10px",
+         padding : "10px 20px",
+         border: "none",
+         borderRadius: "5px",
+         marginBottom: "10px",
+         cursor: "pointer"
+       }} 
    onClick={() =>{
+    setEmergencyMode(true);
   getLocation();
   setType("hospital");
   }}>
@@ -164,6 +175,7 @@ const nearestPlace =
 
           
       <button className ="button" onClick={() => {
+        setEmergencyMode(false);
         getLocation();
        setType("hospital");
        console.log("Location:",location);
@@ -172,6 +184,7 @@ const nearestPlace =
       </button>
 
       <button className='button' onClick={() => {
+        setEmergencyMode(false);
         getLocation();
        setType("police");
        console.log("Location:",location);
@@ -180,14 +193,16 @@ const nearestPlace =
       </button>
 
       <button className='button' onClick={() => {
+        setEmergencyMode(false);
         getLocation();
         setType("fire");
         console.log("Location:",location);
       }}>
         Fire
       </button>
-      {loading && places.length === 0 && 
+      {loading && places.length === 0 && !emergencyMode && 
       <p>🔍 Finding nearby help...</p>}
+   
       {!loading && error && (
         <div>
         <p style={{ color: "red" }}>{error}</p>
@@ -199,7 +214,7 @@ const nearestPlace =
       onChange={(e) => setSearch(e.target.value)}
        style={{ marginTop: "10px", padding: "8px", width: "80%" }}
           />
-     {location && places.length > 0 && (
+     {location && places.length > 0 && !emergencyMode && (
   <MapContainer
     center={[location.lat, location.lng]}
     zoom={15}
@@ -224,7 +239,7 @@ const nearestPlace =
       {!loading && !error && places.length === 0 && type &&(
         <p>No nearby {type} found</p>
       )}
-      {!loading && places.length > 0 && (
+      {!loading && places.length > 0 && !emergencyMode && (
          <div>
         
         <h2>Nearby Results</h2>
@@ -255,7 +270,11 @@ const nearestPlace =
         ))}
       </div>
      )}
+    
     </div>
+    )}
+    </div>
+    </>
   );
-};
+}
 export default App;
