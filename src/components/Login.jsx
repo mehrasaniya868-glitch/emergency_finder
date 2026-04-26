@@ -1,6 +1,8 @@
 import React,{useState} from "react";
 import "./Login.css";
 const Login = ({onLogin}) => {
+  const [countryCode , setCountryCode] = useState("+91");
+  const [error , setError] =useState("");
   const [username, setUsername] = useState("");
   const [phone, setPhone] = useState("");
     const handleSubmit = () => {
@@ -25,10 +27,18 @@ const Login = ({onLogin}) => {
       />
 
       <input
-        type="number"
+     
+        type="text"
         placeholder="Enter your phone number"
         value={phone}
-        onChange={(e) => setPhone(e.target.value)}
+        onChange={(e) => 
+          {
+            const value = e.target.value.replace (/\D/g, "");
+            if(value.length<=10){
+              setPhone(value);
+            }
+          }}
+        
       />
 
       <button onClick={handleSubmit}>
