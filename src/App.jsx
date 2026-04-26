@@ -1,5 +1,5 @@
 import "./App.css";
-import React,{useState,useEffect} from 'react';
+import React,{useState,useEffect, use} from 'react';
 import "leaflet/dist/leaflet.css";
 import Heading from './components/Heading';
 import Login from "./components/Login";
@@ -7,6 +7,7 @@ import L from "leaflet";
 import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
 const App = () => {
   const[user,setUser] = useState(null);
+  const [watchId , setWatchId] = useState(null);
   const [location, setLocation] = useState(null);
   const[type,setType] = useState("");
   const [places ,setPlaces] = useState([]);
@@ -15,7 +16,8 @@ const App = () => {
   const [search ,setSearch] = useState("");
   const [emergencyMode , setEmergencyMode] = useState(false);
   const getLocation = () => {
-    navigator.geolocation.getCurrentPosition(
+    if(watchId !== null)return;
+    navigator.geolocation.watchPosition(
       (position) => {
         setLocation({
           lat: position.coords.latitude,
@@ -26,6 +28,7 @@ const App = () => {
         console.log("Error:", error.message);
       }
     );
+    setWatchId(id);
   };
   const getEmergencyNumber = () => {
     if(type ==="hospital")return "102";
@@ -68,7 +71,13 @@ const App = () => {
       setUser(JSON.parse(savedUser));
     }
   }, []);
-
+ useEffect(() => {
+  return () => {
+    if(watchId !== null){
+      navigator.geolocation.clearWatch(watchId);
+    }
+  };
+ }, [watchId]);
   const fetchNearbyPlaces = async() =>
  {
   if(!location) return;
