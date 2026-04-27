@@ -17,8 +17,10 @@ const App = () => {
   const [emergencyMode , setEmergencyMode] = useState(false);
   const getLocation = () => {
     if(watchId !== null)return;
+    const id = navigator.geolocation.watchPosition(
     navigator.geolocation.watchPosition(
       (position) => {
+        console.log("Received Location Sucessfully");
         setLocation({
           lat: position.coords.latitude,
           lng: position.coords.longitude
@@ -27,7 +29,7 @@ const App = () => {
       (error) => {
         console.log("Error:", error.message);
       }
-    );
+    ));
     setWatchId(id);
   };
   const getEmergencyNumber = () => {
@@ -89,9 +91,9 @@ const App = () => {
     if ( type === "fire") amenityType ="fire_station";
 
    const query = `
-  [out:json] [timeout:25];
+  [out:json] [timeout:10];
   (
-  node["amenity"="${amenityType}"](around:50000,${location.lat},${location.lng});
+  node["amenity"="${amenityType}"](around:5000,${location.lat},${location.lng});
   );
   out body;
   `;
@@ -216,8 +218,8 @@ onClick={() => {
           
       <button className ="button" onClick={() => {
         setEmergencyMode(false);
+        setType("hospital");
         getLocation();
-       setType("hospital");
        console.log("Location:",location);
       }}>
         Ambulance
@@ -225,8 +227,8 @@ onClick={() => {
 
       <button className='button' onClick={() => {
         setEmergencyMode(false);
+         setType("police");
         getLocation();
-       setType("police");
        console.log("Location:",location);
       }}>
         Police
@@ -234,8 +236,8 @@ onClick={() => {
 
       <button className='button' onClick={() => {
         setEmergencyMode(false);
+         setType("fire");
         getLocation();
-        setType("fire");
         console.log("Location:",location);
       }}>
         Fire
@@ -249,7 +251,6 @@ onClick={() => {
         <button onClick={fetchNearbyPlaces}>🔄Retry</button>
         </div> 
       )}
-  
       <input type="text" placeholder="search place..." value={search} 
       onChange={(e) => setSearch(e.target.value)}
        style={{ marginTop: "10px", padding: "8px", width: "80%" }}
