@@ -1,5 +1,5 @@
 import "./App.css";
-import React,{useState,useEffect, use} from 'react';
+import React,{useState,useEffect} from 'react';
 import "leaflet/dist/leaflet.css";
 import Heading from './components/Heading';
 import Login from "./components/Login";
@@ -16,9 +16,12 @@ const App = () => {
   const [search ,setSearch] = useState("");
   const [emergencyMode , setEmergencyMode] = useState(false);
   const getLocation = () => {
+    if(!navigator.geolocation){
+      alert("Geolocation is not supported by your browser");
+      return;
+    }
     if(watchId !== null)return;
     const id = navigator.geolocation.watchPosition(
-    navigator.geolocation.watchPosition(
       (position) => {
         console.log("Received Location Sucessfully");
         setLocation({
@@ -29,7 +32,7 @@ const App = () => {
       (error) => {
         console.log("Error:", error.message);
       }
-    ));
+    );
     setWatchId(id);
   };
   const getEmergencyNumber = () => {
@@ -57,11 +60,7 @@ const App = () => {
     }
   },[location,type]); 
    
-  useEffect(() => {
-    if(emergencyMode &&location && type ==="hospital" && places.length >0){
-      handleEmergencyClick();
-    }
-  },[places]);
+ 
   useEffect(() =>
   {
     console.log("Emergency Mode:" ,emergencyMode);
@@ -112,7 +111,12 @@ console.log("API:" , data);
 setPlaces(data.elements || []);
 } catch (err) {
     console.error("Error:", err);
-    setError("Failed to fetch data");
+    if(err.message === "API failed"){
+      setError("Server busy 😔 Please try again");
+    }
+      else{
+        setError("Something went wrong")
+      }
   } finally {
     setLoading(false);
   }
@@ -126,6 +130,11 @@ const nearestPlace =
         return prevDist < currDist ? prev : curr;
       })
     : null;
+     useEffect(() => {
+    if(emergencyMode && nearestPlace){
+      handleEmergencyClick();
+    }
+  },[nearestPlace,emergencyMode]);
      const filteredPlaces = search?
       places.filter((place) => {
     const name = place.tags?.name?.toLowerCase() || "";
@@ -211,11 +220,12 @@ onClick={() => {
     setEmergencyMode(true);
   getLocation();
   setType("hospital");
+  setTimeout(() => {
+    handleEmergencyClick();
+  }, 2000);
   }}>
   🚨 Emergency Help
 </button>
-
-          
       <button className ="button" onClick={() => {
         setEmergencyMode(false);
         setType("hospital");
