@@ -1,11 +1,13 @@
 import "./App.css";
 import React,{useState,useEffect} from 'react';
 import "leaflet/dist/leaflet.css";
+import { useMap } from "react-leaflet";
 import Heading from './components/Heading';
 import Login from "./components/Login";
 import L from "leaflet";
 import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
 const App = () => {
+const [animatedPos, setAnimatedPos] = useState(null);
   const[user,setUser] = useState(null);
   const [watchId , setWatchId] = useState(null);
   const [location, setLocation] = useState(null);
@@ -59,6 +61,28 @@ const App = () => {
       fetchNearbyPlaces();
     }
   },[location,type]); 
+
+  useEffect(() => {
+    if(!location)return;
+  if(!animatedPos){
+    setAnimatedPos(location);
+    return;
+  }
+  let start = animatedPos;
+  let end = location;
+  let steps = 20;
+  let count =0;
+  const imterval = setInterval(() => {
+    count++;
+    const lat = start.lat + (end.lat - start.lat) * (count / steps);
+    const lng = start.lng + (end.lng - start.lng) * (count / steps);
+    setAnimatedPos({lat,lng});
+    if(count>=steps){
+      clearInterval(imterval);
+    }
+  }, 50);
+  return () => clearInterval(imterval);
+  }, [location]);
    
  
   useEffect(() =>
@@ -135,6 +159,15 @@ const nearestPlace =
       handleEmergencyClick();
     }
   },[nearestPlace,emergencyMode]);
+   const MapUpdater = ({location}) => {
+    const map = useMap();
+    useEffect(() => { 
+      if(location){
+        map.setView([location.lat, location.lng], 15);
+      }
+    }, [location]);
+    return null;
+  };
      const filteredPlaces = search?
       places.filter((place) => {
     const name = place.tags?.name?.toLowerCase() || "";
@@ -220,9 +253,6 @@ onClick={() => {
     setEmergencyMode(true);
   getLocation();
   setType("hospital");
-  setTimeout(() => {
-    handleEmergencyClick();
-  }, 2000);
   }}>
   🚨 Emergency Help
 </button>
@@ -267,12 +297,20 @@ onClick={() => {
           />
      {location && places.length > 0 && !emergencyMode && (
   <MapContainer
+ 
     center={[location.lat, location.lng]}
     zoom={15}
     style={{ height: "400px", width: "100%", marginTop: "20px" }}>
+      <MapUpdater location={animatedPos || location} />
     <TileLayer
       url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"/>
-    <Marker position={[location.lat, location.lng]} icon={userIcon}>
+  <Marker
+  position={[
+    animatedPos?.lat || location.lat,
+    animatedPos?.lng || location.lng
+  ]}
+  icon={userIcon}
+  >
       <Popup>You are here</Popup>
     </Marker>
     {sortedPlaces.map((place, index) => (
