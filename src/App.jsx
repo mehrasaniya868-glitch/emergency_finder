@@ -27,8 +27,8 @@ const [animatedPos, setAnimatedPos] = useState(null);
       (position) => {
         console.log("Received Location Sucessfully");
         setLocation({
-          lat: position.coords.latitude,
-          lng: position.coords.longitude
+         lat: position.coords.latitude ,
+         lng: position.coords.longitude 
         });
       },
       (error) => {
@@ -43,6 +43,11 @@ const [animatedPos, setAnimatedPos] = useState(null);
     if(type=== "fire") return "101";
   };
   const getDistance = (lat1 ,lon1 , lat2 ,lon2) => {
+  const getETA = (distance) => {
+  const speed = 40; 
+  const time = distance / speed;
+  return (time * 60).toFixed(0); 
+  };
     const R = 6371 ;
     const dLat =(lat2 -lat1) * Math.PI /180 ;
     const dLon = (lon2 -lon1) * Math.PI /180 ;
@@ -103,6 +108,7 @@ const [animatedPos, setAnimatedPos] = useState(null);
     }
   };
  }, [watchId]);
+
   const fetchNearbyPlaces = async() =>
  {
   if(!location) return;
@@ -129,7 +135,6 @@ const [animatedPos, setAnimatedPos] = useState(null);
     if (!response.ok) {
   throw new Error("API failed");
 }
-
 const data = await response.json();
 console.log("API:" , data);
 setPlaces(data.elements || []);
@@ -343,6 +348,11 @@ onClick={() => {
             <p>
               📏{getDistance(location.lat , location.lng ,
                  place.lat , place.lon)} km away
+            </p>
+            <p>
+              ⏱️ {getETA(
+                 getDistance(location.lat, location.lng, place.lat, place.lon)
+                )} min away
             </p>
             <p><b>{place.tags?.name || 'Unnamed Place'}</b></p>
            <p>📍 Latitude: {place.lat}</p>
