@@ -1,6 +1,7 @@
 import "./App.css";
 import React,{useState,useEffect} from 'react';
 import "leaflet/dist/leaflet.css";
+import { Polyline } from "react-leaflet";
 import { useMap } from "react-leaflet";
 import Heading from './components/Heading';
 import Login from "./components/Login";
@@ -43,11 +44,6 @@ const [animatedPos, setAnimatedPos] = useState(null);
     if(type=== "fire") return "101";
   };
   const getDistance = (lat1 ,lon1 , lat2 ,lon2) => {
-  const getETA = (distance) => {
-  const speed = 40; 
-  const time = distance / speed;
-  return (time * 60).toFixed(0); 
-  };
     const R = 6371 ;
     const dLat =(lat2 -lat1) * Math.PI /180 ;
     const dLon = (lon2 -lon1) * Math.PI /180 ;
@@ -59,6 +55,11 @@ const [animatedPos, setAnimatedPos] = useState(null);
 
     const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
     return (R * c).toFixed(2);
+  };
+   const getETA = (distance) => {
+  const speed = 40; 
+  const time = distance / speed;
+  return (time * 60).toFixed(0); 
   };
   useEffect(() => {
     console.log("updated location:",location);
@@ -152,6 +153,7 @@ setPlaces(data.elements || []);
 };
   
 const nearestPlace =
+
   places.length > 0
     ? places.reduce((prev, curr) => {
         const prevDist = getDistance(location.lat, location.lng, prev.lat, prev.lon);
@@ -164,6 +166,12 @@ const nearestPlace =
       handleEmergencyClick();
     }
   },[nearestPlace,emergencyMode]);
+   const routePositions = location && nearestPlace
+  ? [
+      [location.lat, location.lng],
+      [nearestPlace.lat, nearestPlace.lon]
+    ]
+  : [];                  
    const MapUpdater = ({location}) => {
     const map = useMap();
     useEffect(() => { 
@@ -301,7 +309,9 @@ onClick={() => {
        style={{ marginTop: "10px", padding: "8px", width: "80%" }}
           />
      {location && places.length > 0 && !emergencyMode && (
+      
   <MapContainer
+  
  
     center={[location.lat, location.lng]}
     zoom={15}
@@ -318,6 +328,9 @@ onClick={() => {
   >
       <Popup>You are here</Popup>
     </Marker>
+     {routePositions.length > 0 && (
+    <Polyline positions={routePositions} />
+     )}
     {sortedPlaces.map((place, index) => (
       <Marker key={index} position={[place.lat, place.lon]}
       icon={
