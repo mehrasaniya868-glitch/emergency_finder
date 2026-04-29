@@ -181,6 +181,28 @@ const nearestPlace =
     }, [location]);
     return null;
   };
+  const Routing = ({ location, nearestPlace }) => {
+  const map = useMap();
+
+  useEffect(() => {
+    if (!location || !nearestPlace) return;
+
+    const routingControl = L.Routing.control({
+      waypoints: [
+        L.latLng(location.lat, location.lng),
+        L.latLng(nearestPlace.lat, nearestPlace.lon)
+      ],
+      lineOptions: {
+        styles: [{ color: "blue", weight: 5 }]
+      },
+      createMarker: () => null 
+    }).addTo(map);
+
+    return () => map.removeControl(routingControl);
+  }, [location, nearestPlace]);
+
+  return null;
+};
      const filteredPlaces = search?
       places.filter((place) => {
     const name = place.tags?.name?.toLowerCase() || "";
