@@ -1,8 +1,10 @@
 const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
-mongoose.connect("mongodb+srv://saniyafinder_emergency4:Emergency123@cluster0.uut00t6.mongodb.net/?appName=Cluster0")
-.then(()=> console.log("MongoDB connected successfully"))
+require('dotenv').config();
+
+mongoose.connect(process.env.MONGO_URI)
+.then(() => console.log("MongoDB connected successfully"))
 .catch((err) => console.log(err));
 const app = express();
 
@@ -15,6 +17,7 @@ app.use("/",emergencyRoutes);
 app.get("/",(req,res)=>{
     res.send("Emergency Backend Running 🚀");
 });
-app.listen(5000,()=>{
-    console.log("Server is running on port 5000");
+const PORT = process.env.PORT || 5000;
+app.listen(PORT,"0.0.0.0", () => {
+    console.log(`Server is running on port ${PORT}`);
 });

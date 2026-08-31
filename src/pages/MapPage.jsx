@@ -86,45 +86,65 @@ const MapPage = () => {
     return (time * 60).toFixed(0);
   };
 
-  const fetchNearbyPlaces = async () => {
-    if (!location) return;
-    setLoading(true);
-    setError("");
-    let amenityType = "";
-    if (type === "hospital") amenityType = "hospital";
-    if (type === "police") amenityType = "police";
-    if (type === "fire") amenityType = "fire_station";
+const fetchNearbyPlaces = async () => {
+  if (!location) return;
 
-    const query = `
-  [out:json] [timeout:10];
-  (
-  node["amenity"="${amenityType}"](around:25000,${location.lat},${location.lng});
-  );
-  out body;
-  `;
-    try {
-      const response = await fetch("https://overpass-api.de/api/interpreter", {
-        method: "POST",
-        body: query,
-      });
-      if (!response.ok) {
-        throw new Error("API failed");
-      }
-      const data = await response.json();
-      console.log("API:", data);
-      console.log("Places Found:", data.elements);
-      setPlaces(data.elements || []);
-    } catch (err) {
-      console.error("Error:", err);
-      if (err.message === "API failed") {
-        setError("Server busy. Please try again");
-      } else {
-        setError("Something went wrong");
-      }
-    } finally {
-      setLoading(false);
+  setLoading(true);
+  setError("");
+
+  let serviceType = "";
+
+  if (type === "hospital") {
+    serviceType = "hospital";
+  } else if (type === "police") {
+    serviceType = "police";
+  } else if (type === "fire") {
+    serviceType = "fire_station";
+  } else {
+    setError("Please select an emergency service");
+    setLoading(false);
+    return;
+  }
+
+  try {
+    const url = `http://localhost:5000/nearby?lat=${location.lat}&lon=${location.lng}&type=${serviceType}`;
+
+    console.log("Fetching nearby:", url);
+
+    const response = await fetch(url);
+
+    console.log("Live Map API status:", response.status);
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error("Backend error:", errorText);
+
+      throw new Error(`Backend API failed: ${response.status}`);
     }
-  };
+
+    const data = await response.json();
+
+    console.log("Backend Response:", data);
+    console.log("Raw places:", data.elements);
+
+    const elements = data.elements || [];
+
+    setPlaces(elements);
+
+    if (elements.length === 0) {
+      setError(`No nearby ${serviceType} found.`);
+    }
+
+  } catch (err) {
+    console.error("Nearby places error:", err);
+
+    setPlaces([]);
+    setError("Unable to fetch nearby services. Please try again.");
+
+  } finally {
+    setLoading(false);
+  }
+};
 
   const shareLocation = () => {
     if (!location) {
@@ -154,11 +174,10 @@ const MapPage = () => {
   }, []);
 
   useEffect(() => {
-    console.log("updated location:", location);
-    if (location && type) {
+    if (!location || !type) return;
       fetchNearbyPlaces();
-    }
-  }, [location, type]);
+    
+  }, [type]);
 
   useEffect(() => {
     if (!location) return;
@@ -315,6 +334,7 @@ const MapPage = () => {
             }`}
             onClick={() => {
               setEmergencyMode(false);
+              setPlaces([]);
               setType("hospital");
               getLocation();
             }}
@@ -328,6 +348,7 @@ const MapPage = () => {
             }`}
             onClick={() => {
               setEmergencyMode(false);
+              setPlaces([]);
               setType("police");
               getLocation();
             }}
@@ -341,6 +362,7 @@ const MapPage = () => {
             }`}
             onClick={() => {
               setEmergencyMode(false);
+              setPlaces([]);
               setType("fire");
               getLocation();
             }}

@@ -159,7 +159,6 @@ const ResultIcon = aiResult?.Icon;
          />
         </div>
         </section>
-        
       <section className="analyzer-grid">
         <div className="analyzer-input-panel">
       <div className="input-header">
