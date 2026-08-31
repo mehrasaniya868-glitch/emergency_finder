@@ -107,7 +107,7 @@ const fetchNearbyPlaces = async () => {
   }
 
   try {
-    const url = `https://emergency-backend-lme6.onrender.com/nearby?lat=${location.lat}&lon=${location.lng}&type=${serviceType}`;
+    const url = `${import.meta.env.VITE_API_URL}/nearby?lat=${location.lat}&lon=${location.lng}&type=${serviceType}`;
 
     console.log("Fetching nearby:", url);
 
