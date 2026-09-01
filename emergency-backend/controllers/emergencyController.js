@@ -39,7 +39,7 @@ exports.addEmergency = async(req,res) => {
         }
     };
 
-    exports.getNearbyPlaces = async (req, res) => {
+   exports.getNearbyPlaces = async (req, res) => {
     try {
         const { lat, lon, type } = req.query;
 
@@ -57,24 +57,70 @@ exports.addEmergency = async(req,res) => {
             out body;
         `;
 
-        const response = await fetch(
+        const overpassServers = [
             "https://overpass-api.de/api/interpreter",
-            {
-                method: "POST",
-                headers: {
-                    "Content-Type": "text/plain"
-                },
-                body: query
-            }
-        );
+            "https://maps.mail.ru/osm/tools/overpass/api/interpreter",
+            "https://overpass.private.coffee/api/interpreter"
+        ];
 
-        if (!response.ok) {
-            throw new Error("Overpass API failed");
+        let lastError = null;
+
+        for (const server of overpassServers) {
+            try {
+                console.log("Trying Overpass:", server);
+
+                const response = await fetch(server, {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "text/plain",
+                        "User-Agent": "EmergencyFinder/1.0"
+                    },
+                    body: query
+                });
+
+                console.log("Overpass status:", response.status);
+
+                if (!response.ok) {
+                    const errorText = await response.text();
+
+                    console.error(
+                        "Overpass error:",
+                        response.status,
+                        errorText
+                    );
+
+                    lastError = new Error(
+                        `Overpass returned ${response.status}`
+                    );
+
+                    continue;
+                }
+
+                const data = await response.json();
+
+                console.log(
+                    "Overpass results:",
+                    data.elements?.length
+                );
+
+                return res.json(data);
+
+            } catch (error) {
+                console.error(
+                    "Overpass server failed:",
+                    server,
+                    error.message
+                );
+
+                lastError = error;
+            }
         }
 
-        const data = await response.json();
+        console.error("All Overpass servers failed:", lastError);
 
-        res.json(data);
+        return res.status(503).json({
+            message: "Nearby service is temporarily unavailable"
+        });
 
     } catch (error) {
         console.error("Nearby places error:", error);
@@ -83,4 +129,4 @@ exports.addEmergency = async(req,res) => {
             message: "Unable to fetch nearby places"
         });
     }
-}; 
+};
