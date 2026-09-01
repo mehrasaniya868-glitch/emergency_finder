@@ -50,11 +50,13 @@ exports.addEmergency = async(req,res) => {
         }
 
         const query = `
-            [out:json] [timeout:10];
+            [out:json] [timeout:25];
             (
                 node["amenity"="${type}"](around:25000,${lat},${lon});
-            );
-            out body;
+                way["amenity"="${type}"](around:5000,${lat},${lon});
+                relation["amenity"="${type}"](around:5000,${lat},${lon});
+           );
+            out center;
         `;
 
         const overpassServers = [
