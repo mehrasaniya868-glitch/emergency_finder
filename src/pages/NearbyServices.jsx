@@ -65,34 +65,52 @@ useEffect(() => {
     return (R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a))).toFixed(2);
   };
 
-  const fetchAll = async () => {
-    if (!location) return;
-    setLoading(true);
-    setError("");
-    const query = `
-      [out:json][timeout:25];
-      (
-        node["amenity"="hospital"](around:5000,${location.lat},${location.lng});
-        node["amenity"="police"](around:5000,${location.lat},${location.lng});
-        node["amenity"="fire_station"](around:5000,${location.lat},${location.lng});
-      );
-      out body;
-    `;
-    try {
-      const res = await fetch("https://overpass-api.de/api/interpreter", {
-        method: "POST",
-        body: query,
-      });
-      if (!res.ok) throw new Error("API failed");
-      const data = await res.json();
-      setPlaces(data.elements || []);
-    } catch (err) {
-      console.error("[v0] Nearby fetch error:", err);
-      setError("Server busy. Please try again.");
-    } finally {
-      setLoading(false);
+const fetchAll = async () => {
+  if (!location) return;
+
+  setLoading(true);
+  setError("");
+
+  const services = ["hospital", "police", "fire_station"];
+
+  try {
+    const results = await Promise.all(
+      services.map(async (type) => {
+        const url = `${import.meta.env.VITE_API_URL}/nearby?lat=${location.lat}&lon=${location.lng}&type=${type}`;
+
+        console.log("Fetching nearby:", url);
+
+        const response = await fetch(url);
+
+        console.log(`${type} status:`, response.status);
+
+        if (!response.ok) {
+          throw new Error(`${type} request failed`);
+        }
+
+        return response.json();
+      })
+    );
+
+    const allPlaces = results.flatMap(
+      (data) => data.elements || []
+    );
+
+    console.log("Nearby services:", allPlaces);
+
+    setPlaces(allPlaces);
+
+    if (allPlaces.length === 0) {
+      setError("No nearby emergency services found.");
     }
-  };
+  } catch (err) {
+    console.error("Nearby fetch error:", err);
+    setPlaces([]);
+    setError("Server busy. Please try again.");
+  } finally {
+    setLoading(false);
+  }
+};
 
   useEffect(() => {
     if (location) fetchAll();
